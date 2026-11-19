@@ -1,0 +1,39 @@
+{
+  "Version": 3,
+  "FileReferences": {
+    "Moc": "140.moc3",
+    "Textures": [
+      "textures/texture_00.png"
+    ],
+    "Physics": "140.physics3.json",
+    "Motions": {
+      "": [
+        {
+          "File": "motions/Mgirl110_xihuan.motion3.json"
+        },
+        {
+          "File": "motions/Mgirl110_xihuan.motion3.json"
+        },
+        {
+          "File": "motions/Mgirl110_taoyan.motion3.json"
+        },
+        {
+          "File": "motions/Mgirl110_taoyan.motion3.json"
+        },
+        {
+          "File": "motions/Mgirl110_stand.motion3.json"
+        },
+        {
+          "File": "motions/Mgirl110_stand.motion3.json"
+        },
+        {
+          "File": "motions/Mgirl110_weixiao.motion3.json"
+        },
+        {
+          "File": "motions/Mgirl110_weixiao.motion3.json"
+        }
+      ]
+    }
+  },
+  "Groups": []
+}

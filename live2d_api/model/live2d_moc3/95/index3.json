@@ -1,0 +1,21 @@
+{
+  "Version": 3,
+  "FileReferences": {
+    "Moc": "95.moc3",
+    "Textures": [
+      "textures/texture_00.png"
+    ],
+    "Physics": "95.physics3.json",
+    "Motions": {
+      "": [
+        {
+          "File": "motions/Mgirl06_stand.motion3.json"
+        },
+        {
+          "File": "motions/Mgirl06_stand.motion3.json"
+        }
+      ]
+    }
+  },
+  "Groups": []
+}

@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://api.tiax.cn/font/?id=MiSans" rel="stylesheet">
+    <link rel="icon" href="https://tiax.cn/favicon.ico">
+    <title>Live2D看板娘配置</title>
+    <link rel="stylesheet" href="https://npm.elemecdn.com/font-awesome@4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github.min.css">
+    <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
+    <script>
+    try {
+        var _rs = sessionStorage.getItem('demo_init_side');
+        if (_rs === 'left' || _rs === 'right') window.__demoPendingSide = _rs;
+        sessionStorage.removeItem('demo_init_side');
+        if (sessionStorage.getItem('demo_model_cleared') === '1') {
+            window.__demoModelClearedPending = true;
+            sessionStorage.removeItem('demo_model_cleared');
+        }
+    } catch (e0) {}
+    </script>
+    <style>
+        :root {
+            --demo-bg: #e8edf2;
+            --demo-panel: #ffffff;
+            --demo-border: #d0d7de;
+            --demo-muted: #656d76;
+            --demo-text: #1f2328;
+            --demo-accent: #0969da;
+            --demo-btn-bg: #f6f8fa;
+            --demo-btn-bg-hover: #eff2f5;
+            --demo-code-bg: #f6f8fa;
+            --demo-radius: 8px;
+            --demo-side-gutter: clamp(180px, 22vw, 420px);
+        }
+        *, *::before, *::after { box-sizing: border-box; }
+        html, body {
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+            font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+            font-size: 16px;
+            color: var(--demo-text);
+            background: var(--demo-bg);
+        }
+        /* 中间栏：左右留白给看板娘 */
+        .demo-viewport {
+            height: 100%;
+            min-height: 0;
+            display: flex;
+            justify-content: center;
+            padding: 10px var(--demo-side-gutter);
+        }
+        .demo-stack {
+            width: 100%;
+            max-width: 1040px;
+            min-width: 0;
+            min-height: 0;
+            height: 100%;
+            display: grid;
+            /* 上排双卡片 : LOG = 4 : 6 */
+            grid-template-rows: minmax(0, 4fr) minmax(0, 6fr);
+            gap: 10px;
+        }
+        .demo-panel {
+            background: var(--demo-panel);
+            border: 1px solid var(--demo-border);
+            border-radius: var(--demo-radius);
+            padding: 10px 12px;
+            min-height: 0;
+        }
+        .demo-panel--grow {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+        .demo-sec-title {
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: var(--demo-muted);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        #demo-bar label.lbl {
+            display: block;
+            font-size: 0.72rem;
+            color: var(--demo-muted);
+            margin-bottom: 3px;
+            font-weight: 500;
+        }
+        /* 一行两卡片：模型配置 | 嵌入代码 */
+        #demo-bar.demo-bar-cards {
+            min-height: 0;
+            overflow: hidden;
+            display: grid;
+            /* 模型配置 : 嵌入代码 = 6 : 4 */
+            grid-template-columns: minmax(0, 6fr) minmax(0, 4fr);
+            gap: 10px;
+            align-items: stretch;
+            padding: 0;
+            background: transparent;
+            border: none;
+            box-shadow: none;
+        }
+        @media (max-width: 820px) {
+            #demo-bar.demo-bar-cards {
+                grid-template-columns: 1fr;
+            }
+        }
+        .demo-panel--config {
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            min-width: 0;
+            overflow: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .demo-panel--embed {
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            min-width: 0;
+            overflow: hidden;
+        }
+        #demo-bar .demo-panel--embed .demo-sec--embed {
+            flex: 1 1 auto;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            margin-top: 0 !important;
+            padding-top: 0 !important;
+            border-top: none !important;
+        }
+        #demo-bar .demo-panel--embed .demo-sec--embed .hljs-pre {
+            flex: 1;
+            min-height: 0;
+        }
+        #demo-bar select,
+        #demo-bar input[type="number"] {
+            width: 100%;
+            padding: 6px 8px;
+            border-radius: 6px;
+            border: 1px solid var(--demo-border);
+            font-size: 0.82rem;
+            background: #ffffff;
+            color: var(--demo-text);
+        }
+        #demo-bar .demo-sec { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--demo-border); }
+        #demo-bar .demo-sec:first-of-type { margin-top: 0; padding-top: 0; border-top: none; }
+        #demo-bar .demo-top-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px 14px;
+            align-items: start;
+        }
+        @media (max-width: 560px) {
+            #demo-bar .demo-top-grid { grid-template-columns: 1fr; }
+        }
+        #demo-bar #demo-layout-clear {
+            padding: 6px 12px;
+            font-size: 0.78rem;
+            border-radius: 6px;
+            border: 1px solid #1a7f37;
+            background: #1f883d;
+            color: #fff;
+            cursor: pointer;
+            white-space: nowrap;
+            width: 100%;
+        }
+        #demo-bar #demo-layout-clear:hover { background: #116329; border-color: #116329; }
+        #demo-bar .demo-appearance-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px 12px;
+            align-items: end;
+        }
+        #demo-bar .demo-appearance-grid .field { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+        #demo-bar .demo-appearance-grid .bubble-row {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px 12px;
+            align-items: end;
+        }
+        #demo-bar .demo-clear-wrap { margin-top: 8px; display: flex; flex-direction: column; align-items: stretch; gap: 10px; }
+        #demo-bar .demo-tools-wrap--under-reset { margin-top: 0; }
+        @media (max-width: 520px) {
+            #demo-bar .demo-appearance-grid { grid-template-columns: 1fr; }
+            #demo-bar .demo-appearance-grid .bubble-row { grid-template-columns: 1fr; }
+        }
+        #demo-bar .cfg-item { margin-top: 2px; }
+        #demo-bar .cfg-item label { display: inline; margin-right: 8px; font-size: 0.8rem; color: var(--demo-text); cursor: pointer; }
+        #demo-bar .cfg-checks { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+        #demo-bar .cfg-checks label { display: inline-flex; align-items: center; gap: 6px; margin-right: 0; }
+        #demo-bar .demo-tools-wrap .lbl { margin-bottom: 6px; }
+        #demo-bar .demo-tools-grid { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; font-size: 0.78rem; }
+        #demo-bar .demo-tools-grid label { display: inline-flex; align-items: center; gap: 5px; margin: 0; font-weight: 500; color: var(--demo-muted); }
+        #demo-bar .sides { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+        #demo-bar .sides > span { font-size: 0.78rem; color: var(--demo-muted); }
+        #demo-bar .sides label { margin: 0 0 0 6px; cursor: pointer; font-size: 0.82rem; color: var(--demo-text); }
+        #demo-bar .hint { margin: 6px 0 0; font-size: 0.68rem; color: var(--demo-muted); line-height: 1.4; }
+        #demo-bar .demo-id-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px 12px; margin-top: 6px; }
+        #demo-bar .demo-id-row .id-pair { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; color: var(--demo-muted); flex: 1 1 100px; min-width: 0; }
+        #demo-bar .demo-id-row .id-pair input[type="number"] { flex: 1; min-width: 0; max-width: 110px; }
+        #demo-bar .demo-id-btns { display: flex; flex-wrap: wrap; gap: 6px; flex: 0 0 auto; }
+        #demo-bar #demo-id-apply, #demo-bar #demo-id-clear {
+            padding: 5px 10px;
+            font-size: 0.78rem;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 1px solid var(--demo-border);
+            background: var(--demo-btn-bg);
+            color: var(--demo-text);
+        }
+        #demo-bar #demo-id-apply:hover, #demo-bar #demo-id-clear:hover { background: var(--demo-btn-bg-hover); }
+        #demo-bar #demo-id-apply { border-color: var(--demo-accent); color: var(--demo-accent); }
+
+        .demo-code-head, .demo-log-head-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            gap: 8px;
+        }
+        .demo-code-head span, .demo-log-head-bar .log-title {
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: var(--demo-muted);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        #demo-bar .demo-config-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+        #demo-bar .demo-config-actions button {
+            padding: 5px 10px;
+            font-size: 0.78rem;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 1px solid var(--demo-border);
+            background: var(--demo-btn-bg);
+            color: var(--demo-text);
+        }
+        #demo-bar .demo-config-actions button:hover { background: var(--demo-btn-bg-hover); }
+        #demo-bar #demo-config-generate { border-color: var(--demo-accent); color: var(--demo-accent); }
+        #demo-log-wrap #demo-log-clear {
+            font-size: 0.72rem;
+            padding: 3px 8px;
+            border-radius: 4px;
+            border: 1px solid var(--demo-border);
+            background: var(--demo-btn-bg);
+            color: var(--demo-text);
+            cursor: pointer;
+        }
+        #demo-log-wrap #demo-log-clear:hover { background: var(--demo-btn-bg-hover); }
+
+        /* 嵌入代码块更高：通用字号略大；LOG 区单独缩小字号与视觉权重 */
+        #demo-config-pre.hljs-pre {
+            font-size: 12px;
+            min-height: 140px;
+        }
+        /* —— 页面内 LOG：白底黑字 + 级别色条/徽标；%c 内联样式仍作用于正文 span —— */
+        .demo-log-scroller {
+            margin: 0;
+            padding: 6px 0;
+            border-radius: 6px;
+            border: 1px solid var(--demo-border);
+            background: #ffffff;
+            overflow: auto;
+            flex: 1;
+            min-height: 0;
+            font-family: ui-monospace, "Cascadia Mono", "SF Mono", Consolas, Menlo, monospace;
+            font-size: 11px;
+            line-height: 1.45;
+            color: #1f2328;
+        }
+        .demo-log-lines { padding: 0 4px; }
+        .demo-log-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            gap: 4px 8px;
+            padding: 2px 6px;
+            margin: 0;
+            border-left: 3px solid transparent;
+            border-radius: 2px;
+        }
+        .demo-log-row:hover { background: rgba(0, 0, 0, 0.04); }
+        .demo-log-time {
+            flex: 0 0 auto;
+            color: #656d76;
+            font-size: 10px;
+            user-select: none;
+        }
+        .demo-log-pill {
+            flex: 0 0 auto;
+            font-family: system-ui, sans-serif;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            padding: 2px 6px;
+            border-radius: 3px;
+            text-transform: uppercase;
+        }
+        .demo-log-body {
+            flex: 1 1 200px;
+            min-width: 0;
+            color: #1f2328;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .demo-log-body > span { vertical-align: baseline; }
+        /* 浅色背景上的级别区分（边线 + 徽标） */
+        .demo-log-row--LOG { border-left-color: #8c959f; }
+        .demo-log-row--LOG .demo-log-pill { background: #e8eaed; color: #3c4043; }
+        .demo-log-row--INFO { border-left-color: #1a73e8; }
+        .demo-log-row--INFO .demo-log-pill { background: #1a73e8; color: #fff; }
+        .demo-log-row--WARN { border-left-color: #e18800; }
+        .demo-log-row--WARN .demo-log-pill { background: #e18800; color: #fff; }
+        .demo-log-row--ERROR { border-left-color: #d93025; }
+        .demo-log-row--ERROR .demo-log-pill { background: #d93025; color: #fff; }
+        .demo-log-row--DEBUG { border-left-color: #137333; }
+        .demo-log-row--DEBUG .demo-log-pill { background: #137333; color: #fff; }
+        .demo-log-row--REJECTION { border-left-color: #d93025; }
+        .demo-log-row--REJECTION .demo-log-pill { background: #d93025; color: #fff; }
+
+        .hljs-pre {
+            margin: 0;
+            padding: 8px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--demo-border);
+            background: var(--demo-code-bg) !important;
+            overflow: auto;
+            flex: 1;
+            min-height: 0;
+            font-size: 11px;
+            line-height: 1.45;
+        }
+        .hljs-pre code {
+            display: block;
+            padding: 0 !important;
+            background: transparent !important;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .hljs-pre--placeholder { opacity: 0.92; }
+        .hljs-pre--placeholder .hljs-comment { color: var(--demo-muted) !important; }
+    </style>
+</head>
+<body>
+    <div class="demo-viewport">
+        <div class="demo-stack">
+            <div id="demo-bar" class="demo-bar-cards">
+                <div class="demo-panel demo-panel--config">
+                <div class="demo-top-grid">
+                    <div>
+                        <div class="demo-sec">
+                            <div class="demo-sec-title">模型</div>
+                            <label class="lbl" for="demo-model">从列表选择</label>
+                            <select id="demo-model"></select>
+                            <label class="lbl" style="margin-top:8px;">模型 ID（可以从下面的LOG日志查看）</label>
+                            <div class="demo-id-row">
+                                <span class="id-pair"><span>modelId</span><input type="number" id="demo-model-id" min="1" step="1" placeholder="例 3"></span>
+                                <span class="id-pair"><span>textureId</span><input type="number" id="demo-texture-id" min="0" step="1" placeholder="例 1"></span>
+                                <div class="demo-id-btns">
+                                    <button type="button" id="demo-id-apply">应用 ID</button>
+                                    <button type="button" id="demo-id-clear">清空 ID</button>
+                                </div>
+                            </div>
+                            <div class="demo-clear-wrap">
+                                <button type="button" id="demo-layout-clear">重置画布与气泡设置</button>
+                                <div class="field cfg-item demo-tools-wrap demo-tools-wrap--under-reset">
+                                    <span class="lbl">工具栏按钮</span>
+                                    <div class="demo-tools-grid">
+                                        <label><input type="checkbox" id="demo-tool-hitokoto" checked> 一言</label>
+                                        <label><input type="checkbox" id="demo-tool-asteroids" checked> 小游戏</label>
+                                        <label><input type="checkbox" id="demo-tool-switch-model" checked> 模型切换</label>
+                                        <label><input type="checkbox" id="demo-tool-switch-texture" checked> 模型换肤</label>
+                                        <label><input type="checkbox" id="demo-tool-info" checked> 关于</label>
+                                        <label><input type="checkbox" id="demo-tool-photo" checked> 拍照</label>
+                                        <label><input type="checkbox" id="demo-tool-quit" checked> 退出</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="demo-sec">
+                            <div class="demo-sec-title">显示位置</div>
+                            <div class="sides">
+                                <span>看板娘在屏幕</span>
+                                <label><input type="radio" name="demo-side" value="left" checked> 左侧</label>
+                                <label><input type="radio" name="demo-side" value="right"> 右侧</label>
+                            </div>
+                        </div>
+                        <div class="demo-sec">
+                            <div class="demo-sec-title">外观（留空则用默认 CSS）</div>
+                            <div class="demo-appearance-grid">
+                                <div class="field">
+                                    <label class="lbl" for="demo-canvas-w">画布宽 (px)</label>
+                                    <input type="number" id="demo-canvas-w" min="100" max="2000" step="10" placeholder="不填默认">
+                                </div>
+                                <div class="field">
+                                    <label class="lbl" for="demo-canvas-h">画布高 (px)</label>
+                                    <input type="number" id="demo-canvas-h" min="100" max="2000" step="10" placeholder="不填默认">
+                                </div>
+                                <div class="bubble-row">
+                                    <div class="field">
+                                        <label class="lbl" for="demo-tips-top">气泡上下 (px)</label>
+                                        <input type="number" id="demo-tips-top" min="-300" max="200" step="5" placeholder="不填默认">
+                                    </div>
+                                    <div class="field">
+                                        <label class="lbl" for="demo-tips-inset">气泡左右 (px)</label>
+                                        <input type="number" id="demo-tips-inset" min="-400" max="800" step="5" placeholder="不填默认">
+                                    </div>
+                                </div>
+                                <div class="field cfg-item cfg-checks" style="grid-column:1/-1;">
+                                    <label><input type="checkbox" id="demo-hide-tips"> 隐藏对话框 (#waifu-tips)</label>
+                                    <label><input type="checkbox" id="demo-hide-waifu-tool"> 隐藏看板娘工具栏 (#waifu-tool)</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+
+                <div class="demo-panel demo-panel--embed">
+                <div class="demo-sec demo-sec--embed">
+                    <div class="demo-sec-title">嵌入其他页的代码</div><p class="hint">顺序为：看板娘引入（init）→ 可选自定义 script（模型）→ 自定义 css。贴在目标页 <code>&lt;/body&gt;</code> 前。</p>
+                    <div class="demo-code-head">
+                        <span>HTML</span>
+                        <div class="demo-config-actions">
+                            <button type="button" id="demo-config-generate">获取当前配置</button>
+                            <button type="button" id="demo-config-copy">复制</button>
+                        </div>
+                    </div>
+                    <pre class="hljs-pre hljs-pre--placeholder" id="demo-config-pre"><code id="demo-config-code" class="language-xml"></code></pre>
+                                </div>
+                </div>
+            </div>
+
+            <div id="demo-log-wrap" class="demo-panel demo-panel--grow">
+                <div class="demo-log-head-bar">
+                    <span class="log-title">LOG</span>
+                    <button type="button" id="demo-log-clear" title="清空">清空</button>
+                </div>
+                <div class="demo-log-scroller" id="demo-log-pre" role="log" aria-live="polite">
+                    <div id="demo-log" class="demo-log-lines"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+        var logCode = document.getElementById('demo-log');
+        var logPre = document.getElementById('demo-log-pre');
+        var configPre = document.getElementById('demo-config-pre');
+        var LOG_MAX_CHARS = 120000;
+        /** highlight.js 对同一 code 再次 highlight 前需清除，否则会 warn 并写 console */
+        function hlUnmarkForRehighlight(el) {
+            if (!el || !el.dataset) return;
+            try { delete el.dataset.highlighted; } catch (e) {}
+        }
+        function pad2(n) { return (n < 10 ? '0' : '') + n; }
+        function timeStr() {
+            var d = new Date();
+            var ms = d.getMilliseconds();
+            return pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ':' + pad2(d.getSeconds()) + '.' + ('00' + ms).slice(-3);
+        }
+        function stringifyArg(a) {
+            if (a === null || a === undefined) return String(a);
+            if (typeof a === 'string') return a;
+            if (typeof a === 'number' || typeof a === 'boolean' || typeof a === 'bigint') return String(a);
+            if (a instanceof Error) return a.stack || a.message || String(a);
+            if (typeof Node !== 'undefined' && a instanceof Node) {
+                if (a.nodeType === 1 && a.tagName) return '<' + String(a.tagName).toLowerCase() + '>';
+                return '[Node]';
+            }
+            try { return JSON.stringify(a); } catch (eJ) { try { return String(a); } catch (e2) { return '[Object]'; } }
+        }
+        /** 控制台 %c 后的 CSS 写入 span style；过滤危险片段 */
+        function sanitizeConsoleCss(css) {
+            if (css == null || typeof css !== 'string') return '';
+            var s = css.replace(/[\x00-\x08\x0b\x0c\x0e-\x1f]/g, '');
+            if (/expression\s*\(|javascript:|@import|behavior\s*:|url\s*\(\s*["']?\s*javascript|<\s*script/i.test(s)) return '';
+            if (s.length > 720) s = s.slice(0, 720);
+            return s;
+        }
+        /**
+         * 解析 console 格式串：%s/%d… 替换；%c 切换后续片段的 CSS（与 Chrome 行为一致，便于 Pixi 等彩色横幅）。
+         */
+        function buildConsoleLogSegments(args) {
+            var list = Array.prototype.slice.call(args);
+            if (!list.length) return [];
+            var fmt = list[0];
+            if (typeof fmt !== 'string') {
+                return [{ text: list.map(stringifyArg).join(' '), css: '' }];
+            }
+            if (fmt.indexOf('%') === -1) {
+                return [{ text: list.map(stringifyArg).join(' '), css: '' }];
+            }
+            var parts = [];
+            var buf = '';
+            var currentCss = '';
+            var ai = 1;
+            var i = 0;
+            function flush() {
+                if (!buf.length) return;
+                parts.push({ text: buf, css: currentCss });
+                buf = '';
+            }
+            while (i < fmt.length) {
+                if (fmt.charCodeAt(i) === 37 && i + 1 < fmt.length) {
+                    var spec = fmt.charAt(i + 1);
+                    if (spec === '%') {
+                        buf += '%';
+                        i += 2;
+                        continue;
+                    }
+                    if (spec === 'c') {
+                        flush();
+                        if (ai < list.length) currentCss = String(list[ai++]);
+                        else currentCss = '';
+                        i += 2;
+                        continue;
+                    }
+                    if (spec === 's' || spec === 'd' || spec === 'i' || spec === 'f' || spec === 'o' || spec === 'O') {
+                        buf += ai < list.length ? stringifyArg(list[ai++]) : '';
+                        i += 2;
+                        continue;
+                    }
+                    buf += '%' + spec;
+                    i += 2;
+                    continue;
+                }
+                buf += fmt.charAt(i++);
+            }
+            flush();
+            while (ai < list.length) {
+                var ex = stringifyArg(list[ai++]);
+                if (parts.length) parts[parts.length - 1].text += ' ' + ex;
+                else parts.push({ text: ex, css: currentCss });
+            }
+            return parts;
+        }
+        function appendDemoLog(level, args) {
+            if (!logCode) return;
+            var safeLevel = /^[A-Z]+$/.test(level) ? level : 'LOG';
+            var row = document.createElement('div');
+            row.className = 'demo-log-row demo-log-row--' + safeLevel;
+            var tEl = document.createElement('span');
+            tEl.className = 'demo-log-time';
+            tEl.textContent = timeStr();
+            var pill = document.createElement('span');
+            pill.className = 'demo-log-pill';
+            pill.textContent = safeLevel;
+            row.appendChild(tEl);
+            row.appendChild(pill);
+            var segs = buildConsoleLogSegments(args);
+            var body = document.createElement('span');
+            body.className = 'demo-log-body';
+            segs.forEach(function (p) {
+                if (!p.text) return;
+                var span = document.createElement('span');
+                span.textContent = p.text;
+                if (p.css) {
+                    var st = sanitizeConsoleCss(p.css);
+                    if (st) span.setAttribute('style', st);
+                }
+                body.appendChild(span);
+            });
+            row.appendChild(body);
+            logCode.appendChild(row);
+            while ((logCode.textContent || '').length > LOG_MAX_CHARS && logCode.firstChild) {
+                logCode.removeChild(logCode.firstChild);
+            }
+            if (logPre) logPre.scrollTop = logPre.scrollHeight;
+        }
+        if (!window.__demoConsolePatched) {
+            window.__demoConsolePatched = true;
+            var methods = ['log', 'info', 'warn', 'error', 'debug'];
+            var orig = {};
+            for (var mi = 0; mi < methods.length; mi++) {
+                var m = methods[mi];
+                orig[m] = console[m];
+                (function (method) {
+                    console[method] = function () {
+                        orig[method].apply(console, arguments);
+                        appendDemoLog(method.toUpperCase(), arguments);
+                    };
+                })(m);
+            }
+            window.addEventListener('error', function (ev) {
+                appendDemoLog('ERROR', [ev.message || 'error', (ev.filename || '') + ':' + (ev.lineno || 0)]);
+            });
+            window.addEventListener('unhandledrejection', function (ev) {
+                var r = ev.reason;
+                var msg = (r && r.stack) ? r.stack : stringifyArg(r);
+                appendDemoLog('REJECTION', [msg]);
+            });
+        }
+        document.getElementById('demo-log-clear').addEventListener('click', function () {
+            if (logCode) logCode.innerHTML = '';
+        });
+
+        var API_BASE = '//127.0.0.1/live2d_api/';
+        var API_MODELS = API_BASE + 'models_list';
+
+        //开发环境
+        var INIT_SRC = '//127.0.0.1/live2d/init.js';
+
+        //正式环境
+        //var INIT_SRC = '//127.0.0.1/live2d/init.js';
+
+        var sel = document.getElementById('demo-model');
+        var inpModelId = document.getElementById('demo-model-id');
+        var inpTextureId = document.getElementById('demo-texture-id');
+        var radios = document.querySelectorAll('input[name="demo-side"]');
+        var inpW = document.getElementById('demo-canvas-w');
+        var inpH = document.getElementById('demo-canvas-h');
+        var inpTipsTop = document.getElementById('demo-tips-top');
+        var inpTipsInset = document.getElementById('demo-tips-inset');
+        var chkHideTips = document.getElementById('demo-hide-tips');
+        var chkHideWaifuTool = document.getElementById('demo-hide-waifu-tool');
+        var LS_CANVAS_W = 'demo_canvas_w';
+        var LS_CANVAS_H = 'demo_canvas_h';
+        var LS_TIPS_TOP = 'demo_tips_top';
+        var LS_TIPS_INSET = 'demo_tips_inset';
+        var LS_HIDE_TIPS = 'demo_hide_tips';
+        var LS_HIDE_WAIFU_TOOL = 'demo_hide_waifu_tool';
+        var LS_DEMO_TOOLS = 'demo_waifu_tools';
+        var DEMO_TOOL_IDS = ['hitokoto', 'asteroids', 'switch-model', 'switch-texture', 'info', 'photo', 'quit'];
+
+        function getEnabledTools() {
+            var out = [];
+            for (var ti = 0; ti < DEMO_TOOL_IDS.length; ti++) {
+                var tid = DEMO_TOOL_IDS[ti];
+                var cb = document.getElementById('demo-tool-' + tid);
+                if (cb && cb.checked) out.push(tid);
+            }
+            return out;
+        }
+
+        function persistDemoToolsToStorage() {
+            try {
+                localStorage.setItem(LS_DEMO_TOOLS, JSON.stringify(getEnabledTools()));
+            } catch (ePt) {}
+        }
+
+        function loadDemoToolsFromStorage() {
+            try {
+                var raw = localStorage.getItem(LS_DEMO_TOOLS);
+                if (raw == null || raw === '') return;
+                var arr = JSON.parse(raw);
+                if (!Array.isArray(arr)) return;
+                var set = {};
+                for (var i = 0; i < arr.length; i++) set[arr[i]] = true;
+                for (var j = 0; j < DEMO_TOOL_IDS.length; j++) {
+                    var id = DEMO_TOOL_IDS[j];
+                    var cbx = document.getElementById('demo-tool-' + id);
+                    if (cbx) cbx.checked = !!set[id];
+                }
+            } catch (eLdT) {}
+        }
+
+        /** 未勾选的工具：用 #demo-waifu-override 隐藏对应 #waifu-tool-*（与 waifu-app 里 span.id 一致） */
+        function buildDemoToolsHideCss() {
+            var lines = [];
+            for (var i = 0; i < DEMO_TOOL_IDS.length; i++) {
+                var toolId = DEMO_TOOL_IDS[i];
+                var cb = document.getElementById('demo-tool-' + toolId);
+                if (cb && !cb.checked) {
+                    lines.push('#waifu #waifu-tool-' + toolId + ' { display: none !important; }\n');
+                }
+            }
+            return lines.length ? lines.join('') : null;
+        }
+
+        /** 空则 null；有值则限制在 min～max */
+        function parsePxInRange(el, min, max) {
+            var s = String(el && el.value != null ? el.value : '').trim();
+            if (s === '') return null;
+            var n = parseInt(s, 10);
+            if (isNaN(n)) return null;
+            return Math.max(min, Math.min(max, n));
+        }
+
+        function parseCanvasPx(el) {
+            return parsePxInRange(el, 100, 2000);
+        }
+
+        function parseTipsTopPx(el) {
+            return parsePxInRange(el, -300, 200);
+        }
+
+        function parseTipsInsetPx(el) {
+            return parsePxInRange(el, -400, 800);
+        }
+
+        /** 看板娘底部图标条 */
+        function buildWaifuToolOverrideCss() {
+            if (!chkHideWaifuTool || !chkHideWaifuTool.checked) return null;
+            return '#waifu #waifu-tool { display: none !important; }\n';
+        }
+
+        /** #waifu-tips：上下、左右、隐藏；左右在左看板娘写 left，右看板娘写 right */
+        function buildTipsOverrideCss() {
+            var topPx = parseTipsTopPx(inpTipsTop);
+            var insetX = parseTipsInsetPx(inpTipsInset);
+            var hideTips = chkHideTips.checked;
+            if (topPx == null && insetX == null && !hideTips) return null;
+            var tips = '#waifu #waifu-tips { ';
+            if (topPx != null) tips += 'top: ' + topPx + 'px !important; ';
+            if (hideTips) tips += 'display: none !important; ';
+            if (insetX != null) {
+                if (getSide() === 'right') {
+                    tips += 'right: ' + insetX + 'px !important; left: auto !important; ';
+                } else {
+                    tips += 'left: ' + insetX + 'px !important; right: auto !important; ';
+                }
+            }
+            tips += '}\n';
+            return tips;
+        }
+
+        function loadWaifuLayoutFromStorage() {
+            try {
+                var w = localStorage.getItem(LS_CANVAS_W);
+                var h = localStorage.getItem(LS_CANVAS_H);
+                var t = localStorage.getItem(LS_TIPS_TOP);
+                var ins = localStorage.getItem(LS_TIPS_INSET);
+                var hid = localStorage.getItem(LS_HIDE_TIPS);
+                if (w != null && w !== '') {
+                    var nw = parseCanvasPx({ value: w });
+                    inpW.value = nw != null ? String(nw) : '';
+                }
+                if (h != null && h !== '') {
+                    var nh = parseCanvasPx({ value: h });
+                    inpH.value = nh != null ? String(nh) : '';
+                }
+                if (t != null && t !== '') {
+                    var nt = parseTipsTopPx({ value: t });
+                    inpTipsTop.value = nt != null ? String(nt) : '';
+                }
+                if (ins != null && ins !== '') {
+                    var ni = parseTipsInsetPx({ value: ins });
+                    inpTipsInset.value = ni != null ? String(ni) : '';
+                }
+                if (hid === '1') chkHideTips.checked = true;
+                else if (hid === '0') chkHideTips.checked = false;
+                var hidTool = localStorage.getItem(LS_HIDE_WAIFU_TOOL);
+                if (chkHideWaifuTool) {
+                    if (hidTool === '1') chkHideWaifuTool.checked = true;
+                    else if (hidTool === '0') chkHideWaifuTool.checked = false;
+                }
+            } catch (eLs0) {}
+            loadDemoToolsFromStorage();
+        }
+
+        function applyDemoWaifuStyle() {
+            var w = parseCanvasPx(inpW);
+            var h = parseCanvasPx(inpH);
+            var topPx = parseTipsTopPx(inpTipsTop);
+            var insetX = parseTipsInsetPx(inpTipsInset);
+            var hideTips = chkHideTips.checked;
+            var hideWaifuTool = chkHideWaifuTool && chkHideWaifuTool.checked;
+            try {
+                if (w == null) localStorage.removeItem(LS_CANVAS_W);
+                else localStorage.setItem(LS_CANVAS_W, String(w));
+                if (h == null) localStorage.removeItem(LS_CANVAS_H);
+                else localStorage.setItem(LS_CANVAS_H, String(h));
+                if (topPx == null) localStorage.removeItem(LS_TIPS_TOP);
+                else localStorage.setItem(LS_TIPS_TOP, String(topPx));
+                if (insetX == null) localStorage.removeItem(LS_TIPS_INSET);
+                else localStorage.setItem(LS_TIPS_INSET, String(insetX));
+                if (hideTips) localStorage.setItem(LS_HIDE_TIPS, '1');
+                else localStorage.removeItem(LS_HIDE_TIPS);
+                if (hideWaifuTool) localStorage.setItem(LS_HIDE_WAIFU_TOOL, '1');
+                else localStorage.removeItem(LS_HIDE_WAIFU_TOOL);
+            } catch (eLs1) {}
+            var chunks = [];
+            if (w != null || h != null) {
+                var live = '#waifu #live2d { ';
+                if (w != null) live += 'width: ' + w + 'px !important; ';
+                if (h != null) live += 'height: ' + h + 'px !important; ';
+                live += '}\n';
+                chunks.push(live);
+            }
+            var tipsCss = buildTipsOverrideCss();
+            if (tipsCss) chunks.push(tipsCss);
+            var toolCss = buildWaifuToolOverrideCss();
+            if (toolCss) chunks.push(toolCss);
+            var demoToolsCss = buildDemoToolsHideCss();
+            if (demoToolsCss) chunks.push(demoToolsCss);
+            var css = chunks.join('');
+            var tag = document.getElementById('demo-waifu-override');
+            if (!css) {
+                if (tag && tag.parentNode) tag.parentNode.removeChild(tag);
+                return;
+            }
+            if (!tag) {
+                tag = document.createElement('style');
+                tag.id = 'demo-waifu-override';
+                tag.type = 'text/css';
+                document.head.appendChild(tag);
+            }
+            tag.textContent = css;
+        }
+
+        loadWaifuLayoutFromStorage();
+        applyDemoWaifuStyle();
+        ['change', 'input'].forEach(function (evt) {
+            inpW.addEventListener(evt, applyDemoWaifuStyle);
+            inpH.addEventListener(evt, applyDemoWaifuStyle);
+            inpTipsTop.addEventListener(evt, applyDemoWaifuStyle);
+            inpTipsInset.addEventListener(evt, applyDemoWaifuStyle);
+        });
+        chkHideTips.addEventListener('change', applyDemoWaifuStyle);
+        if (chkHideWaifuTool) chkHideWaifuTool.addEventListener('change', applyDemoWaifuStyle);
+
+        function onDemoToolCheckboxChange() {
+            persistDemoToolsToStorage();
+            applyDemoWaifuStyle();
+        }
+        for (var dti = 0; dti < DEMO_TOOL_IDS.length; dti++) {
+            (function (toolId) {
+                var el = document.getElementById('demo-tool-' + toolId);
+                if (el) el.addEventListener('change', onDemoToolCheckboxChange);
+            })(DEMO_TOOL_IDS[dti]);
+        }
+
+        document.getElementById('demo-layout-clear').addEventListener('click', function () {
+            inpW.value = '';
+            inpH.value = '';
+            inpTipsTop.value = '';
+            inpTipsInset.value = '';
+            for (var ci = 0; ci < DEMO_TOOL_IDS.length; ci++) {
+                var cx = document.getElementById('demo-tool-' + DEMO_TOOL_IDS[ci]);
+                if (cx) cx.checked = true;
+            }
+            try { localStorage.removeItem(LS_DEMO_TOOLS); } catch (eClrT) {}
+            applyDemoWaifuStyle();
+        });
+
+        var taConfigCode = document.getElementById('demo-config-code');
+
+        function setEmbedHighlight(source, empty) {
+            if (!taConfigCode) return;
+            taConfigCode.textContent = source || '';
+            taConfigCode.className = 'language-xml';
+            hlUnmarkForRehighlight(taConfigCode);
+            try {
+                if (window.hljs && hljs.highlightElement) hljs.highlightElement(taConfigCode);
+            } catch (eH1) {}
+            if (configPre) configPre.classList.toggle('hljs-pre--placeholder', !!empty);
+        }
+
+        function buildEmbedCssSnapshot() {
+            var w = parseCanvasPx(inpW);
+            var h = parseCanvasPx(inpH);
+            var chunks = [];
+            if (w != null || h != null) {
+                var live = '#waifu #live2d { ';
+                if (w != null) live += 'width: ' + w + 'px !important; ';
+                if (h != null) live += 'height: ' + h + 'px !important; ';
+                live += '}\n';
+                chunks.push(live);
+            }
+            var tipsCss = buildTipsOverrideCss();
+            if (tipsCss) chunks.push(tipsCss);
+            var toolCss = buildWaifuToolOverrideCss();
+            if (toolCss) chunks.push(toolCss);
+            var demoToolsCss = buildDemoToolsHideCss();
+            if (demoToolsCss) chunks.push(demoToolsCss);
+            return chunks.join('');
+        }
+
+        /** 可粘贴到任意页：说明 → 看板娘引入(init) → 自定义script(localStorage) → 自定义css */
+        function buildMinimalEmbedCode() {
+            var side = getSide();
+            var mid = String(inpModelId.value || '').trim();
+            var tid = String(inpTextureId.value || '').trim();
+            if (!/^\d+$/.test(mid) || !/^\d+$/.test(tid)) {
+                try {
+                    var lm = localStorage.getItem('modelId');
+                    var lt = localStorage.getItem('modelTexturesId');
+                    if (/^\d+$/.test(lm) && /^\d+$/.test(lt)) {
+                        mid = lm;
+                        tid = lt;
+                    }
+                } catch (eLm) {}
+            }
+            var hasModel = /^\d+$/.test(mid) && /^\d+$/.test(tid) && parseInt(mid, 10) >= 1 && parseInt(tid, 10) >= 0;
+            var cssRaw = buildEmbedCssSnapshot();
+            var cssTrimmed = cssRaw ? cssRaw.replace(/\s+$/m, '').replace(/^\s+/, '') : '';
+
+            var out = [];
+            out.push('<!-- 看板娘引入-->');
+            out.push('<script src="' + INIT_SRC + '" data-side="' + side + '" apiPath="' + API_BASE + '"><\/script>');
+            out.push('');
+            out.push('<!-- 自定义模型，仅当需要指定该模型时使用；不需要则直接删除本段 -->');
+            if (hasModel) {
+                out.push('<script>try{localStorage.setItem("modelId","' + mid + '");localStorage.setItem("modelTexturesId","' + tid + '");}catch(e){}<\/script>');
+            }
+            out.push('');
+            out.push('<!-- 自定义css -->');
+            if (cssTrimmed) {
+                out.push('<style type="text/css">');
+                out.push(cssTrimmed);
+                out.push('<\/style>');
+            } else {
+                out.push('<!-- 无自定义样式时可删本段 -->');
+            }
+            return out.join('\n');
+        }
+
+        document.getElementById('demo-config-generate').addEventListener('click', function () {
+            var txt = buildMinimalEmbedCode();
+            setEmbedHighlight(txt, false);
+            try {
+                if (taConfigCode && window.getSelection && document.createRange) {
+                    var range = document.createRange();
+                    range.selectNodeContents(taConfigCode);
+                    var sel = window.getSelection();
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                }
+            } catch (eSel) {}
+        });
+
+        document.getElementById('demo-config-copy').addEventListener('click', function () {
+            var t = taConfigCode ? taConfigCode.textContent : '';
+            if (!t) {
+                console.warn('请先点击「获取当前配置」');
+                return;
+            }
+            function ok() { console.log('配置代码已复制到剪贴板'); }
+            function fail() { console.warn('复制失败，请手动全选复制'); }
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(t).then(ok).catch(function () {
+                    try {
+                        if (taConfigCode && window.getSelection && document.createRange) {
+                            var range = document.createRange();
+                            range.selectNodeContents(taConfigCode);
+                            var sel = window.getSelection();
+                            sel.removeAllRanges();
+                            sel.addRange(range);
+                        }
+                        if (document.execCommand('copy')) ok();
+                        else fail();
+                    } catch (e2) { fail(); }
+                });
+            } else {
+                try {
+                    if (taConfigCode && window.getSelection && document.createRange) {
+                        var range2 = document.createRange();
+                        range2.selectNodeContents(taConfigCode);
+                        var sel2 = window.getSelection();
+                        sel2.removeAllRanges();
+                        sel2.addRange(range2);
+                    }
+                    if (document.execCommand('copy')) ok();
+                    else fail();
+                } catch (e3) { fail(); }
+            }
+        });
+
+        setEmbedHighlight('<!-- 点击「获取当前配置」生成 HTML -->', true);
+
+        function getSide() {
+            var r = document.querySelector('input[name="demo-side"]:checked');
+            return (r && r.value === 'right') ? 'right' : 'left';
+        }
+
+        function setSide(side) {
+            for (var i = 0; i < radios.length; i++) {
+                radios[i].checked = (radios[i].value === (side === 'right' ? 'right' : 'left'));
+            }
+        }
+
+        if (window.__demoPendingSide) {
+            setSide(window.__demoPendingSide);
+            try { delete window.__demoPendingSide; } catch (e1) {}
+        }
+
+        /** 两个 ID 均为有效数字 → 用输入框；均留空 → 清除 localStorage（交给看板娘默认）；否则用下拉 */
+        function persistModelFromSelectOrInputs() {
+            var mid = String(inpModelId.value || '').trim();
+            var tid = String(inpTextureId.value || '').trim();
+            if (/^\d+$/.test(mid) && /^\d+$/.test(tid)) {
+                var mi = parseInt(mid, 10);
+                var ti = parseInt(tid, 10);
+                if (mi >= 1 && ti >= 0) {
+                    try {
+                        localStorage.setItem('modelId', String(mi));
+                        localStorage.setItem('modelTexturesId', String(ti));
+                    } catch (e2a) {}
+                    return;
+                }
+            }
+            if (mid === '' && tid === '') {
+                try {
+                    localStorage.removeItem('modelId');
+                    localStorage.removeItem('modelTexturesId');
+                } catch (e2c) {}
+                return;
+            }
+            var v = sel.value;
+            if (!v) return;
+            var p = v.split(':');
+            try {
+                localStorage.setItem('modelId', p[0] || '1');
+                localStorage.setItem('modelTexturesId', p[1] || '1');
+            } catch (e2b) {}
+        }
+
+        function syncIdInputsFromSelect() {
+            var v = sel.value;
+            if (!v) return;
+            var p = v.split(':');
+            inpModelId.value = p[0] || '';
+            inpTextureId.value = p[1] != null ? p[1] : '';
+        }
+
+        function trySelectOptionForIds(mid, tid) {
+            if (!mid || !tid) return false;
+            var want = String(mid) + ':' + String(tid);
+            for (var j = 0; j < sel.options.length; j++) {
+                if (sel.options[j].value === want) {
+                    sel.selectedIndex = j;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        document.getElementById('demo-id-apply').addEventListener('click', function () {
+            var mid = String(inpModelId.value || '').trim();
+            var tid = String(inpTextureId.value || '').trim();
+            if (!/^\d+$/.test(mid) || !/^\d+$/.test(tid)) {
+                console.warn('应用 ID：请填写 modelId（≥1）与 textureId（≥0）两个数字');
+                return;
+            }
+            var mi = parseInt(mid, 10);
+            var ti = parseInt(tid, 10);
+            if (mi < 1 || ti < 0) {
+                console.warn('应用 ID：modelId 须 ≥1，textureId 须 ≥0');
+                return;
+            }
+            try {
+                localStorage.setItem('modelId', String(mi));
+                localStorage.setItem('modelTexturesId', String(ti));
+            } catch (eAp) {}
+            trySelectOptionForIds(mi, ti);
+            if (window.__waifuDemoInited) reloadWithDemoState();
+        });
+
+        document.getElementById('demo-id-clear').addEventListener('click', function () {
+            try {
+                localStorage.removeItem('modelId');
+                localStorage.removeItem('modelTexturesId');
+                sessionStorage.setItem('demo_model_cleared', '1');
+                sessionStorage.setItem('demo_init_side', getSide());
+            } catch (eCl) {}
+            location.reload();
+        });
+
+        function injectInit() {
+            var s = document.createElement('script');
+            s.src = INIT_SRC;
+            s.setAttribute('data-side', getSide());
+            s.setAttribute('apiPath', API_BASE);
+            document.body.appendChild(s);
+        }
+
+        function reloadWithDemoState() {
+            try {
+                sessionStorage.setItem('demo_init_side', getSide());
+            } catch (e3) {}
+            persistModelFromSelectOrInputs();
+            location.reload();
+        }
+
+        function onModelChange() {
+            persistModelFromSelectOrInputs();
+            if (window.__waifuDemoInited) {
+                reloadWithDemoState();
+                return;
+            }
+            window.__waifuDemoInited = true;
+            injectInit();
+        }
+
+        for (var ri = 0; ri < radios.length; ri++) {
+            radios[ri].addEventListener('change', function () {
+                applyDemoWaifuStyle();
+                if (window.__waifuDemoInited) reloadWithDemoState();
+            });
+        }
+
+        sel.addEventListener('change', function () {
+            syncIdInputsFromSelect();
+            onModelChange();
+        });
+
+        fetch(API_MODELS)
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                var groups = data.groups || [];
+                var flat = [];
+                for (var g = 0; g < groups.length; g++) {
+                    var folder = groups[g].folder || '';
+                    var ch = groups[g].choices || [];
+                    for (var c = 0; c < ch.length; c++) {
+                        flat.push({
+                            value: ch[c].modelId + ':' + ch[c].textureId,
+                            text: folder + ' / ' + ch[c].label + '  (' + ch[c].path + ')'
+                        });
+                    }
+                }
+                if (!flat.length) return;
+                sel.innerHTML = '';
+                for (var i = 0; i < flat.length; i++) {
+                    var o = document.createElement('option');
+                    o.value = flat[i].value;
+                    o.textContent = flat[i].text;
+                    sel.appendChild(o);
+                }
+                var mid = '';
+                var tid = '';
+                try {
+                    mid = localStorage.getItem('modelId') || '';
+                    tid = localStorage.getItem('modelTexturesId') || '';
+                } catch (e4) {}
+                var want = mid && tid ? (mid + ':' + tid) : '';
+                var found = false;
+                for (var j = 0; j < sel.options.length; j++) {
+                    if (sel.options[j].value === want) {
+                        sel.selectedIndex = j;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) sel.selectedIndex = 0;
+                try {
+                    if (window.__demoModelClearedPending) {
+                        try { delete window.__demoModelClearedPending; } catch (eDel) {}
+                        inpModelId.value = '';
+                        inpTextureId.value = '';
+                    } else if (mid && tid) {
+                        inpModelId.value = mid;
+                        inpTextureId.value = tid;
+                    } else if (sel.options.length) {
+                        syncIdInputsFromSelect();
+                    }
+                } catch (eSync) {}
+                onModelChange();
+            })
+            .catch(function () {
+                sel.innerHTML = '';
+                var o = document.createElement('option');
+                o.textContent = '模型列表加载失败';
+                o.value = '';
+                sel.appendChild(o);
+            });
+    })();
+    </script>
+</body>
+</html>
