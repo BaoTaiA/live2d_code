@@ -6,5 +6,5 @@
  * OSS 上目录需与本地 model/ 下一致：{根}/{modelName}/各文件（与 live2d_api/model/ 相对路径相同）。
  */
 return array(
-    'model_asset_base' => 'https://i.tiax.cn/model',
+    'model_asset_base' => '',
 );
